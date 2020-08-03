@@ -26,3 +26,4 @@ mpirun -n 1 lmfgws -vnkgw1=10 -vnkgw2=10 -vnkgw3=1 '--sfuned~units eV~readsek@us
 
 #  scf cycle
 
+mpirun -n 10 lmfdmft  --ldadc~fn=dc -job=1 --rs=1,1 -vbxc0=1 --udrs temp > scf.log

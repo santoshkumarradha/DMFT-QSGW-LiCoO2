@@ -1,0 +1,28 @@
+conda activate triqs
+echo "14.25" > dc.temp
+mpirun -n 1 lmfdmft --ldadc~fn=dc --job=1 temp
+mpirun -np 1 lmfdmft --ldadc~fn=dc --job=1 temp
+module unload openmpi
+module unload hdf5
+#module unload lapack
+export OMP_NUM_THREADS=1
+export PYTHONPATH="${PYTHONPATH}:/home/srr70/lm_ver6/lm/dmft/interface_solver/"
+/home/srr70/miniconda3/envs/triqs/bin/mpirun -np 32 lmtriqs temp
+
+
+# --- for spectral function 
+mpirun -np 1 lmchk --syml~n=400~lbl=GMKG~mq~q=0,0,0,.5,0,0,2/3,1/3,0,0.0,0,0.0 ctrl.temp
+mpirun -n 1 lmfdmft temp  --rs=1,0 --ldadc~fn=dc -job=1 --pade~nw=501~window=-7/13.606,7/13.606~icut=30,75
+mpirun -np 10 lmfdmft  --rs=1,0 --ldadc~fn=dc -job=1 --gprt~band,fn=syml~rdsigr=sig2~mode=19 temp
+mpirun -n 1 lmfgws temp '--sfuned~units eV~readsek@useef@irrmesh@minmax~eps 0.02~se band@fn=syml nw=2 isp=1 range=-8,8'
+mpirun -n 1 plbnds -sp~atop=10~window=-8,8~writeqp spq.temp
+
+
+# for dos
+
+mpirun -np 10 lmfdmft -vnk1=10 -vnk2=10 -vnk3=1 --ldadc~fn=dc --job=1 --gprt~rdsigr=sig2~mode=19 temp
+mpirun -n 1 lmfgws -vnkgw1=10 -vnkgw2=10 -vnkgw3=1 '--sfuned~units eV~readsek@useef@ib=1:27~eps 0.02~dos isp=1 range=-8,8 getev=12 nw=4~savesea~q' temp 
+
+
+#  scf cycle
+

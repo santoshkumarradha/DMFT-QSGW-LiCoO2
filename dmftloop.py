@@ -29,12 +29,18 @@ def check_iter(fname):
         return False
 
 
-#convergence test
+# convergence test
 
 
 def fprint(text, fname="Convergence.text"):
     with open(fname, 'w+') as f:
         print(text, file=f)
+
+
+def get_mu(fname='log'):
+    file = open(fname).readlines()
+    t = " mu = "
+    return [float(i.split()[2]) for i in file if t in i]
 
 
 def converge(fname):
@@ -109,6 +115,15 @@ def converge(fname):
     plt.show()
     plt.close()
 
+    fig, ax = plt.subplots()
+    mu = get_mu()
+    ax.plot(np.arange(len(mu)) + 1, mu, marker="o", c="k")
+    ax.set_ylabel("$\\mu$")
+    ax.set_xlabel("Iter")
+    plt.tight_layout()
+    plt.savefig("Convergence_mu.png")
+    plt.close()
+
 
 # plotting sig and gl
 def sig_plot(fname, save=False):
@@ -153,23 +168,7 @@ def run_iter(iter, ctrl="temp", np_lmfdmft=1, np_ctqmc=1):
             shutil.copy(filename, dest_dir)
 
         print("Loading modules for lmf")
-        # load confliciting modules ! and set python path and set openmpi processors
-        # cmd = "module load openmpi"
-        # excute(cmd,
-        #        args=None,
-        #        directory="./{}".format(iter_folder),
-        #        fname="log")
-        cmd = "export OMP_NUM_THREADS=1"
-        excute(cmd,
-               args=None,
-               directory="./{}".format(iter_folder),
-               fname="log")
-        cmd = "echo $OMP_NUM_THREADS"
-        excute(cmd,
-               args=None,
-               directory="./{}".format(iter_folder),
-               fname="log")
-
+        os.environ['OMP_NUM_THREADS'] = '1'
         # Run lmfdmft For iter==1, create empty impurity self energy first and then proceed
         if iter == 1:
             print("creating empty impurity self energy")
@@ -197,11 +196,11 @@ def run_iter(iter, ctrl="temp", np_lmfdmft=1, np_ctqmc=1):
 
         # Unload confliciting modules !
         print("Unload confliciting modules !")
-        # cmd = "module unload hdf5"
-        # excute(cmd,
-        #        args=None,
-        #        directory="./{}".format(iter_folder),
-        #        fname="log")
+        cmd = "module unload hdf5"
+        excute(cmd,
+               args=None,
+               directory="./{}".format(iter_folder),
+               fname="log")
         cmd = 'export PYTHONPATH="${PYTHONPATH}:/home/srr70/lm_ver6/lm/dmft/interface_solver/"'
         excute(cmd,
                args=None,
@@ -224,7 +223,7 @@ def run_iter(iter, ctrl="temp", np_lmfdmft=1, np_ctqmc=1):
         print("done \n-------------------------------\n")
 
 
-for iter in np.arange(1, 10):
+for iter in np.arange(1, 30):
     run_iter(iter, ctrl="temp", np_lmfdmft=1, np_ctqmc=32)
     if iter > 1:
         iters = np.arange(1, iter + 1)
